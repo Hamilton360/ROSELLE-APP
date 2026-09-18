@@ -1,101 +1,53 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Roselle VILS Center — Virtual Instructional Learning Support" />
-  <title>Roselle VILS Center</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles.css" />
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Roselle VILS Center — device support and technology operations">
+<title>Roselle VILS Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-  <div class="app-shell">
-    <header class="topbar">
-      <a class="brand" href="#">
-        <div class="brand-mark">V</div>
-        <div><strong>ROSELLE VILS</strong><span>Center</span></div>
-      </a>
-      <div class="topbar-actions">
-        <span id="connectionStatus" class="status-pill"><i></i> Backend ready</span>
-        <button id="signOutBtn" class="ghost-btn hidden">Sign out</button>
-      </div>
-    </header>
+<div class="app-shell">
+<header class="topbar"><a class="brand" href="#" aria-label="Roselle VILS Center home"><div class="brand-mark">V</div><div><strong>ROSELLE VILS</strong><span>Center</span></div></a><div class="topbar-actions"><span id="connectionStatus" class="status-pill"><i></i> Checking backend</span><button id="signOutBtn" class="ghost-btn hidden">Sign out</button></div></header>
+<main id="app">
+<section id="landingView" class="landing">
+<div class="hero"><div class="eyebrow">ROSELLE PUBLIC SCHOOLS • TECHNOLOGY SUPPORT</div><h1>Technology support,<br><span>without the runaround.</span></h1><p>One place to report device problems, missing equipment, day-loaner needs, and manage VILS operations.</p></div>
+<div class="role-grid">
+<button class="role-card" data-role="student"><div class="role-icon">01</div><div><h2>Student</h2><p>Repair tickets, lost devices, and day loaners.</p></div><span>→</span></button>
+<button class="role-card" data-role="teacher"><div class="role-icon">02</div><div><h2>Teacher / Staff</h2><p>Report student or classroom technology issues.</p></div><span>→</span></button>
+<button class="role-card" data-role="techteam"><div class="role-icon">03</div><div><h2>TechTeam</h2><p>Tickets, loaners, shipping, members, and activity.</p></div><span>→</span></button>
+<button class="role-card" data-role="admin"><div class="role-icon">04</div><div><h2>Admin</h2><p>Operations, reporting, maintenance, and access.</p></div><span>→</span></button>
+</div>
+<div class="info-strip"><div><strong>Centralized student lookup</strong><span>Student ID is the primary key. Device data is never manually retyped when roster data is available.</span></div><button class="ghost-btn" id="openGuide">How it works →</button></div>
+</section>
 
-    <main id="app">
-      <section id="landingView" class="landing">
-        <div class="hero">
-          <div class="eyebrow">ROSelle Public Schools • Technology Support</div>
-          <h1>Technology support,<br><span>without the runaround.</span></h1>
-          <p>Submit a support request, report a missing device, request a day loaner, or access the TechTeam workspace.</p>
-        </div>
+<section id="authView" class="panel-view hidden"><button class="back-btn" id="backHome">← Back</button><div class="panel-head"><div class="eyebrow">SECURE ACCESS</div><h1 id="authTitle">Sign in</h1><p id="authCopy">Use your authorized Roselle account to continue.</p></div><form id="authForm" class="form-card"><label>Email<input id="email" type="email" autocomplete="username" required placeholder="you@roselleschools.org"></label><label>Password<input id="password" type="password" autocomplete="current-password" required placeholder="••••••••"></label><button class="primary-btn" type="submit">Sign in <span>→</span></button><p id="authError" class="error-text"></p></form></section>
 
-        <div class="role-grid">
-          <button class="role-card" data-role="student">
-            <div class="role-icon">01</div><div><h2>Student</h2><p>Repair tickets, lost devices, and day loaners.</p></div><span>→</span>
-          </button>
-          <button class="role-card" data-role="teacher">
-            <div class="role-icon">02</div><div><h2>Teacher / Staff</h2><p>Report classroom technology issues.</p></div><span>→</span>
-          </button>
-          <button class="role-card" data-role="techteam">
-            <div class="role-icon">03</div><div><h2>TechTeam</h2><p>Manage tickets, loaners, inventory, and activity.</p></div><span>→</span>
-          </button>
-          <button class="role-card" data-role="admin">
-            <div class="role-icon">04</div><div><h2>Admin</h2><p>Operations, reporting, access, and oversight.</p></div><span>→</span>
-          </button>
-        </div>
-      </section>
+<section id="studentView" class="panel-view hidden"><button class="back-btn" data-back>← Back</button><div class="panel-head"><div class="eyebrow">STUDENT SERVICES</div><h1>What do you need help with?</h1><p>Choose a service, then enter your Student ID. The central roster fills in the student and device record.</p></div><div class="service-grid"><button class="service-card" data-service="ticket"><b>01</b><h2>Repair ticket</h2><p>Report a problem with your school device.</p></button><button class="service-card" data-service="lost"><b>02</b><h2>Lost device</h2><p>Report a missing device and help us identify it.</p></button><button class="service-card" data-service="loaner"><b>03</b><h2>Day loaner</h2><p>Request a temporary device for the school day.</p></button></div><div id="studentFormWrap"></div></section>
 
-      <section id="authView" class="panel-view hidden">
-        <button class="back-btn" id="backHome">← Back</button>
-        <div class="panel-head"><div class="eyebrow" id="authEyebrow">SECURE ACCESS</div><h1 id="authTitle">TechTeam sign in</h1><p id="authCopy">Sign in with your authorized account to continue.</p></div>
-        <form id="authForm" class="form-card">
-          <label>Email<input id="email" type="email" autocomplete="email" required placeholder="you@roselleschools.org"></label>
-          <label>Password<input id="password" type="password" autocomplete="current-password" required placeholder="••••••••"></label>
-          <button class="primary-btn" type="submit">Sign in <span>→</span></button>
-          <p id="authError" class="error-text"></p>
-        </form>
-      </section>
+<section id="teacherView" class="panel-view hidden"><button class="back-btn" data-back>← Back</button><div class="panel-head"><div class="eyebrow">STAFF SERVICES</div><h1>Classroom technology support</h1><p>Select whether the request concerns a student device or your own classroom device.</p></div><form id="teacherForm" class="form-card">
+<div class="choice-grid"><label class="choice"><input type="radio" name="ticket_type" value="student" checked><span><strong>Student device</strong><small>Look up the student and attach their device record.</small></span></label><label class="choice"><input type="radio" name="ticket_type" value="teacher"><span><strong>Teacher device</strong><small>Submit a repair for your own classroom equipment.</small></span></label></div>
+<div class="two-col"><label>Your name<input name="teacher_name" required></label><label>School<input name="school" required placeholder="ACHS"></label></div>
+<div id="teacherStudentFields"><label>Student ID<input id="teacherStudentId" name="student_id" inputmode="numeric" placeholder="Enter Student ID"><button type="button" class="ghost-btn inline-btn" id="teacherLookup">Lookup student</button><div id="teacherStudentResult" class="student-result muted-result">No student loaded.</div></div>
+<div id="teacherDeviceFields" class="hidden"><div class="two-col"><label>Teacher device serial<input name="device_serial"></label><label>Teacher asset tag<input name="asset_tag"></label></div></div>
+<label>Room / period<input name="room_or_period"></label>
+<label>Reason<select name="repair_reason" required><option value="">Select one</option><option>Cracked Screen</option><option>Keyboard Issue</option><option>Trackpad Repair</option><option>Won't Power On</option><option>Battery Issue</option><option>Charging Port</option><option>Software Issue</option><option>Other</option></select></label>
+<label>Describe the issue<textarea name="issue_description" rows="4" required placeholder="Include useful details, symptoms, and anything already tried."></textarea></label>
+<button class="primary-btn" type="submit">Submit request <span>→</span></button><p id="teacherMsg" class="form-msg"></p></form></section>
 
-      <section id="studentView" class="panel-view hidden">
-        <button class="back-btn" data-back>← Back</button>
-        <div class="panel-head"><div class="eyebrow">STUDENT SERVICES</div><h1>What do you need help with?</h1><p>Enter your Student ID once. Your device information will be pulled from the central roster.</p></div>
-        <div class="service-grid">
-          <button class="service-card" data-service="ticket"><b>01</b><h2>Repair ticket</h2><p>Report a problem with your school device.</p></button>
-          <button class="service-card" data-service="lost"><b>02</b><h2>Lost device</h2><p>Tell VILS what happened and where you last had it.</p></button>
-          <button class="service-card" data-service="loaner"><b>03</b><h2>Day loaner</h2><p>Request a temporary device for the school day.</p></button>
-        </div>
-        <div id="studentFormWrap"></div>
-      </section>
-
-      <section id="teacherView" class="panel-view hidden">
-        <button class="back-btn" data-back>← Back</button>
-        <div class="panel-head"><div class="eyebrow">STAFF SERVICES</div><h1>Classroom technology support</h1><p>Submit a request for a teacher or classroom device.</p></div>
-        <form id="teacherForm" class="form-card">
-          <div class="two-col"><label>Your name<input name="teacher_name" required></label><label>School<input name="school" required placeholder="ACHS"></label></div>
-          <div class="two-col"><label>Device serial<input name="device_serial"></label><label>Asset tag<input name="asset_tag"></label></div>
-          <label>Room / period<input name="room_or_period"></label>
-          <label>Reason<select name="repair_reason" required><option value="">Select one</option><option>Cracked Screen</option><option>Keyboard Issue</option><option>Trackpad Repair</option><option>Won't Power On</option><option>Battery Issue</option><option>Charging Port</option><option>Software Issue</option><option>Other</option></select></label>
-          <label>Describe the issue<textarea name="issue_description" rows="4"></textarea></label>
-          <button class="primary-btn" type="submit">Submit request <span>→</span></button>
-          <p id="teacherMsg" class="form-msg"></p>
-        </form>
-      </section>
-
-      <section id="dashboardView" class="panel-view hidden">
-        <div class="dash-head"><div><div class="eyebrow" id="dashRole">TECHTEAM</div><h1>Operations dashboard</h1><p>Roselle VILS Center</p></div><button class="ghost-btn" data-back>← Exit</button></div>
-        <div class="stat-grid">
-          <div class="stat-card"><span>Open tickets</span><strong id="openCount">—</strong></div>
-          <div class="stat-card"><span>Loaners in use</span><strong id="loanerCount">—</strong></div>
-          <div class="stat-card"><span>Lost-device reports</span><strong id="lostCount">—</strong></div>
-          <div class="stat-card"><span>Activity records</span><strong id="activityCount">—</strong></div>
-        </div>
-        <div class="table-card"><div class="table-head"><h2>Recent tickets</h2><button id="refreshDash" class="ghost-btn">Refresh</button></div><div class="table-scroll"><table><thead><tr><th>Ticket</th><th>Student</th><th>Issue</th><th>Status</th><th>Created</th></tr></thead><tbody id="ticketRows"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody></table></div></div>
-      </section>
-    </main>
-  </div>
-  <div id="toast" class="toast"></div>
-  <script type="module" src="./app.js"></script>
-</body>
-</html>
+<section id="dashboardView" class="panel-view hidden"><div class="dash-head"><div><div class="eyebrow" id="dashRole">TECHTEAM</div><h1>Operations dashboard</h1><p>Roselle VILS Center</p></div><button class="ghost-btn" data-back>← Exit</button></div>
+<div id="reminderBanner" class="reminder"><div><strong>Open-ticket reminder</strong><span id="reminderText">Loading current workload…</span></div><button class="ghost-btn" id="jumpTickets">View tickets</button></div>
+<div class="stat-grid"><div class="stat-card"><span>Open tickets</span><strong id="openCount">—</strong></div><div class="stat-card"><span>Loaners in use</span><strong id="loanerCount">—</strong></div><div class="stat-card"><span>Lost-device reports</span><strong id="lostCount">—</strong></div><div class="stat-card"><span>Activity records</span><strong id="activityCount">—</strong></div></div>
+<nav class="dash-nav"><button class="nav-card active" data-panel="tickets"><b>01</b><strong>Tickets</strong><span>Repair queue</span></button><button class="nav-card" data-panel="loaners"><b>02</b><strong>Loaners</strong><span>Inventory & status</span></button><button class="nav-card" data-panel="shipping"><b>03</b><strong>Shipping</strong><span>Outsource tracking</span></button><button class="nav-card" data-panel="lost"><b>04</b><strong>Lost devices</strong><span>Reports</span></button><button class="nav-card" data-panel="activity"><b>05</b><strong>Activity</strong><span>Audit trail</span></button><button class="nav-card" data-panel="guide"><b>06</b><strong>Process guide</strong><span>Workflow reference</span></button></nav>
+<div id="dashTickets" class="dash-panel"><div class="table-card"><div class="table-head"><div><h2>Repair tickets</h2><p>Filter the current queue by status and submission time.</p></div><div class="filter-row"><select id="ticketStatusFilter"><option value="all">All statuses</option><option>Pending</option><option>Sent to Outsource Repair</option><option>In House Repair</option><option>Device Ready</option><option>Completed</option></select><select id="ticketSort"><option value="desc">Newest first</option><option value="asc">Oldest first</option></select><button id="refreshDash" class="ghost-btn">Refresh</button></div></div><div class="table-scroll"><table><thead><tr><th>Ticket</th><th>Student / teacher</th><th>Issue</th><th>Status</th><th>Created</th></tr></thead><tbody id="ticketRows"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody></table></div></div></div>
+<div id="dashLoaners" class="dash-panel hidden"><div class="table-card"><div class="table-head"><div><h2>Loaner inventory</h2><p>Current loaner records visible to the signed-in operations role.</p></div></div><div class="table-scroll"><table><thead><tr><th>Serial</th><th>Type</th><th>Status</th><th>Assigned student</th><th>Ticket</th></tr></thead><tbody id="loanerRows"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody></table></div></div></div>
+<div id="dashShipping" class="dash-panel hidden"><div class="table-card"><div class="table-head"><div><h2>Shipping & repair tracking</h2><p>Outsourced tickets with vendor and tracking information.</p></div></div><div class="table-scroll"><table><thead><tr><th>Ticket</th><th>Vendor</th><th>Tracking</th><th>Ship date</th><th>Return</th></tr></thead><tbody id="shippingRows"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody></table></div></div></div>
+<div id="dashLost" class="dash-panel hidden"><div class="table-card"><div class="table-head"><div><h2>Lost-device reports</h2><p>Reports submitted through the student portal.</p></div></div><div class="table-scroll"><table><thead><tr><th>Student</th><th>ID</th><th>Last room</th><th>Period</th><th>Status</th></tr></thead><tbody id="lostRows"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody></table></div></div></div>
+<div id="dashActivity" class="dash-panel hidden"><div class="table-card"><div class="table-head"><div><h2>Activity log</h2><p>System actions recorded by the application.</p></div></div><div class="table-scroll"><table><thead><tr><th>Action</th><th>Description</th><th>Performed by</th><th>Time</th></tr></thead><tbody id="activityRows"><tr><td colspan="4" class="empty">Loading…</td></tr></tbody></table></div></div></div>
+<div id="dashGuide" class="dash-panel hidden"><div class="guide-grid"><article><b>01</b><h3>Student lookup</h3><p>Student ID is the exact primary lookup key. The application reads the central Students source and snapshots the returned values into each transaction.</p></article><article><b>02</b><h3>Ticket lifecycle</h3><p>Pending → Sent to Outsource Repair → In House Repair → Device Ready → Completed.</p></article><article><b>03</b><h3>Loaners</h3><p>Loaner serial numbers should be unique and physically match the device label. Completion releases an assigned repair loaner.</p></article><article><b>04</b><h3>Status key</h3><div class="legend"><span><i class="dot pending"></i>Pending</span><span><i class="dot outsource"></i>Outsource</span><span><i class="dot repair"></i>In House Repair</span><span><i class="dot ready"></i>Device Ready</span><span><i class="dot complete"></i>Completed</span></div></article></div></div>
+</section>
+<section id="guideView" class="panel-view hidden"><button class="back-btn" data-back>← Back</button><div class="panel-head"><div class="eyebrow">HOW IT WORKS</div><h1>A simple support flow.</h1><p>The VILS Center keeps student/device identity centralized while giving each role the tools it needs.</p></div><div class="guide-grid"><article><b>01</b><h3>Students</h3><p>Sign in, choose a service, enter Student ID, verify the roster/device card, and submit.</p></article><article><b>02</b><h3>Teachers</h3><p>Choose student or teacher device. Student-device tickets use the same exact-ID lookup workflow.</p></article><article><b>03</b><h3>TechTeam</h3><p>Work the repair queue, track loaners and shipping, and use the activity log for operational visibility.</p></article><article><b>04</b><h3>Admins</h3><p>Use the same operations workspace with administrative controls added as those workflows are enabled.</p></article></div></section>
+</main></div><div id="toast" class="toast"></div><script type="module" src="./app.js"></script>
+</body></html>
