@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Roselle VILS Center — Virtual Instructional Learning Support" />
+  <title>Roselle VILS Center</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#">
+        <div class="brand-mark">V</div>
+        <div><strong>ROSELLE VILS</strong><span>Center</span></div>
+      </a>
+      <div class="topbar-actions">
+        <span id="connectionStatus" class="status-pill"><i></i> Backend ready</span>
+        <button id="signOutBtn" class="ghost-btn hidden">Sign out</button>
+      </div>
+    </header>
+
+    <main id="app">
+      <section id="landingView" class="landing">
+        <div class="hero">
+          <div class="eyebrow">ROSelle Public Schools • Technology Support</div>
+          <h1>Technology support,<br><span>without the runaround.</span></h1>
+          <p>Submit a support request, report a missing device, request a day loaner, or access the TechTeam workspace.</p>
+        </div>
+
+        <div class="role-grid">
+          <button class="role-card" data-role="student">
+            <div class="role-icon">01</div><div><h2>Student</h2><p>Repair tickets, lost devices, and day loaners.</p></div><span>→</span>
+          </button>
+          <button class="role-card" data-role="teacher">
+            <div class="role-icon">02</div><div><h2>Teacher / Staff</h2><p>Report classroom technology issues.</p></div><span>→</span>
+          </button>
+          <button class="role-card" data-role="techteam">
+            <div class="role-icon">03</div><div><h2>TechTeam</h2><p>Manage tickets, loaners, inventory, and activity.</p></div><span>→</span>
+          </button>
+          <button class="role-card" data-role="admin">
+            <div class="role-icon">04</div><div><h2>Admin</h2><p>Operations, reporting, access, and oversight.</p></div><span>→</span>
+          </button>
+        </div>
+      </section>
+
+      <section id="authView" class="panel-view hidden">
+        <button class="back-btn" id="backHome">← Back</button>
+        <div class="panel-head"><div class="eyebrow" id="authEyebrow">SECURE ACCESS</div><h1 id="authTitle">TechTeam sign in</h1><p id="authCopy">Sign in with your authorized account to continue.</p></div>
+        <form id="authForm" class="form-card">
+          <label>Email<input id="email" type="email" autocomplete="email" required placeholder="you@roselleschools.org"></label>
+          <label>Password<input id="password" type="password" autocomplete="current-password" required placeholder="••••••••"></label>
+          <button class="primary-btn" type="submit">Sign in <span>→</span></button>
+          <p id="authError" class="error-text"></p>
+        </form>
+      </section>
+
+      <section id="studentView" class="panel-view hidden">
+        <button class="back-btn" data-back>← Back</button>
+        <div class="panel-head"><div class="eyebrow">STUDENT SERVICES</div><h1>What do you need help with?</h1><p>Enter your Student ID once. Your device information will be pulled from the central roster.</p></div>
+        <div class="service-grid">
+          <button class="service-card" data-service="ticket"><b>01</b><h2>Repair ticket</h2><p>Report a problem with your school device.</p></button>
+          <button class="service-card" data-service="lost"><b>02</b><h2>Lost device</h2><p>Tell VILS what happened and where you last had it.</p></button>
+          <button class="service-card" data-service="loaner"><b>03</b><h2>Day loaner</h2><p>Request a temporary device for the school day.</p></button>
+        </div>
+        <div id="studentFormWrap"></div>
+      </section>
+
+      <section id="teacherView" class="panel-view hidden">
+        <button class="back-btn" data-back>← Back</button>
+        <div class="panel-head"><div class="eyebrow">STAFF SERVICES</div><h1>Classroom technology support</h1><p>Submit a request for a teacher or classroom device.</p></div>
+        <form id="teacherForm" class="form-card">
+          <div class="two-col"><label>Your name<input name="teacher_name" required></label><label>School<input name="school" required placeholder="ACHS"></label></div>
+          <div class="two-col"><label>Device serial<input name="device_serial"></label><label>Asset tag<input name="asset_tag"></label></div>
+          <label>Room / period<input name="room_or_period"></label>
+          <label>Reason<select name="repair_reason" required><option value="">Select one</option><option>Cracked Screen</option><option>Keyboard Issue</option><option>Trackpad Repair</option><option>Won't Power On</option><option>Battery Issue</option><option>Charging Port</option><option>Software Issue</option><option>Other</option></select></label>
+          <label>Describe the issue<textarea name="issue_description" rows="4"></textarea></label>
+          <button class="primary-btn" type="submit">Submit request <span>→</span></button>
+          <p id="teacherMsg" class="form-msg"></p>
+        </form>
+      </section>
+
+      <section id="dashboardView" class="panel-view hidden">
+        <div class="dash-head"><div><div class="eyebrow" id="dashRole">TECHTEAM</div><h1>Operations dashboard</h1><p>Roselle VILS Center</p></div><button class="ghost-btn" data-back>← Exit</button></div>
+        <div class="stat-grid">
+          <div class="stat-card"><span>Open tickets</span><strong id="openCount">—</strong></div>
+          <div class="stat-card"><span>Loaners in use</span><strong id="loanerCount">—</strong></div>
+          <div class="stat-card"><span>Lost-device reports</span><strong id="lostCount">—</strong></div>
+          <div class="stat-card"><span>Activity records</span><strong id="activityCount">—</strong></div>
+        </div>
+        <div class="table-card"><div class="table-head"><h2>Recent tickets</h2><button id="refreshDash" class="ghost-btn">Refresh</button></div><div class="table-scroll"><table><thead><tr><th>Ticket</th><th>Student</th><th>Issue</th><th>Status</th><th>Created</th></tr></thead><tbody id="ticketRows"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody></table></div></div>
+      </section>
+    </main>
+  </div>
+  <div id="toast" class="toast"></div>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
