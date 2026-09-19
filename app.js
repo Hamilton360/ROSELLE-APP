@@ -321,6 +321,13 @@ document.querySelectorAll('input[name="ticket_type"]').forEach(r => r.onchange =
   $("#teacherStudentId").required = student;
 });
 
+$("#teacherRepairReason").onchange = () => {
+  const other = $("#teacherRepairReason").value === "Other";
+  $("#teacherOtherIssueWrap").classList.toggle("hidden", !other);
+  const field = $('textarea[name="other_issue_description"]', $("#teacherForm"));
+  if (field) field.required = other;
+};
+
 $("#teacherLookup").onclick = async () => {
   const id = $("#teacherStudentId").value.trim();
   if (!id) return;
