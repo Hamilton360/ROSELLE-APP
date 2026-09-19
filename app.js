@@ -607,9 +607,58 @@ function renderDayRequests() {
     '</tr>'
   ).join("") || '<tr><td colspan="5" class="empty">No day-loaner requests.</td></tr>';
 
-  document.querySelectorAll("[data-request-ticket]").forEach(b => b.onclick = () =>
-    toast("Day-loaner request is queued for TechTeam handling.")
+  document.querySelectorAll("[data-request-ticket]").forEach(b => b.onclick = () => {
+    const request = dashboardRows.find(x => x.record_type === "day_loaner_request" && String(x.ticket_id || x.id) === b.dataset.requestTicket);
+    if (request) openDayRequestModal(request);
+  });
+}
+
+function openDayRequestModal(request) {
+  const available = dashboardRows.filter(x =>
+    x.record_type === "loaner" && x.loaner_status === "Available" && x.is_available !== false
   );
+
+  openModal(
+    '<div class="modal-head"><div><div class="eyebrow">DAY-LOANER REQUEST</div><h2>Review request</h2></div>' +
+    '<button class="ghost-btn" id="closeModal">Close</button></div>' +
+    '<div class="detail-grid">' +
+      '<div><span>Student</span><strong>' + esc(request.student_name || "—") + '</strong></div>' +
+      '<div><span>Student ID</span><strong>' + esc(request.student_id || "—") + '</strong></div>' +
+      '<div><span>School</span><strong>' + esc(request.school || "—") + '</strong></div>' +
+      '<div><span>Requested</span><strong>' + esc(fmt(request.created_at)) + '</strong></div>' +
+    '</div>' +
+    '<form id="dayRequestForm" class="modal-form">' +
+      '<label>Available loaner<select name="loaner_serial" required>' +
+        '<option value="">Select a loaner</option>' +
+        available.map(x => '<option value="' + esc(x.loaner_serial) + '">' + esc(x.loaner_serial) + ' — ' + esc(x.loaner_type || "Device") + '</option>').join("") +
+      '</select></label>' +
+      '<button class="primary-btn" type="submit" ' + (available.length ? "" : "disabled") + '>Assign loaner <span>→</span></button>' +
+      '<p id="modalMsg" class="form-msg">' + (available.length ? "" : "No available loaners are currently recorded.") + '</p>' +
+    '</form>'
+  );
+
+  $("#dayRequestForm").onsubmit = async e => {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    const btn = e.currentTarget.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    $("#modalMsg").textContent = "Assigning…";
+
+    const r = await supabase.rpc("fulfill_day_loaner_request", {
+      p_request_id: request.id,
+      p_loaner_serial: fd.get("loaner_serial")
+    });
+
+    if (r.error) {
+      btn.disabled = false;
+      $("#modalMsg").textContent = r.error.message;
+      return;
+    }
+
+    toast("Day loaner assigned");
+    closeModal();
+    await loadDashboard();
+  };
 }
 
 function renderMembers() {
@@ -793,6 +842,8 @@ function openLoanerModal(serial = "") {
           '<button class="primary-btn" type="submit">Save loaner <span>→</span></button>') +
         (!creating && loaner?.loaner_status === "In Use"
           ? '<button type="button" class="ghost-btn" id="releaseLoaner">Release loaner</button>' : '') +
+        (!creating && loaner?.loaner_status === "Available"
+          ? '<button type="button" class="ghost-btn" id="assignLoaner">Assign to ticket</button>' : '') +
       '</div><p id="modalMsg" class="form-msg"></p>' +
     '</form>'
   );
@@ -827,6 +878,40 @@ function openLoanerModal(serial = "") {
     toast(creating ? "Loaner added" : "Loaner updated");
     closeModal();
     await loadDashboard();
+  };
+
+  const assign = $("#assignLoaner");
+  if (assign) assign.onclick = () => {
+    const tickets = dashboardRows.filter(x => x.record_type === "ticket" && x.status !== "Completed");
+    const options = tickets.map(x =>
+      '<option value="' + esc(x.ticket_id) + '">' + esc(x.ticket_id) + ' — ' + esc(x.student_name || x.teacher_name || "Ticket") + '</option>'
+    ).join("");
+    openModal(
+      '<div class="modal-head"><div><div class="eyebrow">LOANER ASSIGNMENT</div><h2>Assign loaner</h2></div><button class="ghost-btn" id="closeModal">Close</button></div>' +
+      '<form id="assignLoanerForm" class="modal-form">' +
+      '<label>Ticket<select name="ticket_id" required><option value="">Select a ticket</option>' + options + '</select></label>' +
+      '<button class="primary-btn" type="submit" ' + (tickets.length ? "" : "disabled") + '>Assign <span>→</span></button>' +
+      '<p id="modalMsg" class="form-msg">' + (tickets.length ? "" : "No open tickets are available.") + '</p></form>'
+    );
+    $("#assignLoanerForm").onsubmit = async e => {
+      e.preventDefault();
+      const fd = new FormData(e.currentTarget);
+      const btn = e.currentTarget.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      $("#modalMsg").textContent = "Assigning…";
+      const r = await supabase.rpc("assign_loaner", {
+        p_loaner_serial: serial,
+        p_ticket_id: fd.get("ticket_id")
+      });
+      if (r.error) {
+        btn.disabled = false;
+        $("#modalMsg").textContent = r.error.message;
+        return;
+      }
+      toast("Loaner assigned");
+      closeModal();
+      await loadDashboard();
+    };
   };
 
   const release = $("#releaseLoaner");
