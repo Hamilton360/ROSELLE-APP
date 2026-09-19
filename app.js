@@ -73,8 +73,10 @@ function setConnection(ok, message = "") {
 }
 
 async function checkBackend() {
-  const r = await supabase.from("app_records").select("id", { count:"exact", head:true });
-  setConnection(!r.error, r.error?.message);
+  const r = await supabase.rpc("lookup_student", { p_student_id: "__vils_health_check__" });
+  const reachable = !r.error || String(r.error.message || "").toLowerCase().includes("no matching student");
+  setConnection(reachable, reachable ? "" : r.error?.message);
+}
 }
 checkBackend();
 
@@ -221,9 +223,11 @@ function studentCard(s) {
     '<span>ID: ' + esc(s.student_id) + '</span>' +
     '<span>Asset: ' + esc(s.asset_tag || "Not available") + '</span>' +
     '<span>Serial: ' + esc(s.device_serial || "Not available") + '</span>' +
-    '<span>Type: ' + esc(s.device_type || "Not available") + '</span>' +
     '</div>';
 }
+
+const repairReasons = ["Cracked Screen","Keyboard Issue","Trackpad Repair","Won't Power On","Battery Issue","Charging Port","Software Issue","Hinge Damage","Water Damage","Other"];
+const repairReasonOptions = () => repairReasons.map(x => '<option>' + esc(x) + '</option>').join("");
 
 function otherIssueField() {
   return '<label id="otherIssueWrap" class="hidden">Additional issue details' +
@@ -232,12 +236,10 @@ function otherIssueField() {
 
 function repairFields(prefix = "") {
   return '<label>Reason<select name="repair_reason" id="' + prefix + 'repairReason" required>' +
-    '<option value="">Select one</option>' +
-    '<option>Cracked Screen</option><option>Keyboard Issue</option>' +
-    '<option>Trackpad Repair</option><option>Won\'t Power On</option>' +
-    '<option>Battery Issue</option><option>Charging Port</option>' +
-    '<option>Software Issue</option><option>Other</option>' +
+    '<option value="">Select one</option>' + repairReasonOptions() +
     '</select></label>' + otherIssueField();
+}
+
 }
 
 function bindRepairReason(root) {
@@ -459,7 +461,8 @@ function ensureDashboardTools() {
     '<button class="nav-card" data-panel="dayrequests"><b>07</b><strong>Day requests</strong><span>Temporary device queue</span></button>' +
     '<button class="nav-card" data-panel="members"><b>08</b><strong>Members</strong><span>TechTeam access</span></button>' +
     '<button class="nav-card" data-panel="reports"><b>09</b><strong>Reports</strong><span>Admin metrics</span></button>' +
-    '<button class="nav-card" data-panel="maintenance"><b>10</b><strong>Maintenance</strong><span>System checks</span></button>'
+    '<button class="nav-card" data-panel="maintenance"><b>10</b><strong>Maintenance</strong><span>System checks</span></button>' +
+    '<button class="nav-card" data-panel="manual"><b>11</b><strong>Manual ticket</strong><span>TechTeam entry</span></button>'
   );
 
   const dash = $("#dashboardView");
@@ -479,7 +482,9 @@ function ensureDashboardTools() {
 
       '<div id="dashReports" class="dash-panel hidden"><div class="table-card">' +
         '<div class="table-head"><div><h2>Operations report</h2><p>Current database counts. Admin access required.</p></div>' +
-        '<button class="ghost-btn" id="refreshReport">Refresh report</button></div>' +
+        '<div class="filter-row"><button class="ghost-btn" id="refreshReport">Refresh report</button>' +
+          '<button class="ghost-btn" id="exportBackup">Export backup</button><button class="ghost-btn" id="importBackup">Import backup</button>' +
+          '<input id="backupFile" type="file" accept=".json,application/json" class="hidden"></div></div>' +
         '<div id="reportBody" class="report-grid"><div class="empty">Load report to view metrics.</div></div>' +
       '</div></div>' +
 
@@ -487,6 +492,18 @@ function ensureDashboardTools() {
         '<div class="table-head"><div><h2>Maintenance</h2><p>Application and data integrity checks.</p></div></div>' +
         '<div id="maintenanceBody" class="maintenance-list"></div>' +
       '</div></div>' +
+      '<div id="dashManual" class="dash-panel hidden"><div class="table-card">' +
+        '<div class="table-head"><div><h2>Create a ticket for someone else</h2><p>TechTeam-only manual entry when a person cannot use the public portal or is not in the roster.</p></div></div>' +
+        '<form id="manualTicketForm" class="modal-form">' +
+          '<div class="choice-grid"><label class="choice"><input type="radio" name="manual_person_type" value="student" checked><span><strong>Student</strong><small>Use the student ID when available.</small></span></label>' +
+          '<label class="choice"><input type="radio" name="manual_person_type" value="teacher"><span><strong>Teacher / Staff</strong><small>Enter the person and device details manually.</small></span></label></div>' +
+          '<div class="two-col"><label>Person name<input name="manual_person_name" required></label><label>Student ID<input name="manual_student_id" inputmode="numeric" placeholder="Student ID if known"></label></div>' +
+          '<div class="two-col"><label>Device serial<input name="manual_device_serial"></label><label>Asset tag<input name="manual_asset_tag"></label></div>' +
+          '<div class="two-col"><label>School<input name="manual_school" value="ACHS"></label><label>Room / period<input name="manual_room_or_period"></label></div>' +
+          '<label>Reason<select name="manual_repair_reason" required><option value="">Select one</option>' + repairReasonOptions() + '</select></label>' +
+          '<label>Describe the issue<textarea name="manual_issue_description" rows="5" required></textarea></label>' +
+          '<button class="primary-btn" type="submit">Create ticket <span>→</span></button><p id="manualTicketMsg" class="form-msg"></p>' +
+        '</form></div></div>' +
     '</div>' +
     '<div id="recordModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Record editor"></div>'
   );
@@ -495,6 +512,10 @@ function ensureDashboardTools() {
   $("#refreshRequests").onclick = renderDayRequests;
   $("#refreshReport").onclick = loadReport;
   $("#addMemberBtn").onclick = () => openMemberModal();
+  $("#exportBackup").onclick = exportBackup;
+  $("#importBackup").onclick = () => $("#backupFile").click();
+  $("#backupFile").onchange = importBackupFile;
+  $("#manualTicketForm").onsubmit = submitManualTicket;
 
   // Loaner inventory is managed from the existing Loaners panel.
   const loanerHead = $("#dashLoaners .table-head");
@@ -587,7 +608,7 @@ function renderTickets() {
       '<td><strong>' + esc(x.ticket_id || "—") + '</strong></td>' +
       '<td>' + esc(x.student_name || x.teacher_name || "—") +
         '<small>' + esc(x.student_id || x.teacher_room_or_period || "") + '</small></td>' +
-      '<td>' + esc(x.repair_reason || "—") + '</td>' +
+      '<td>' + esc(x.repair_reason || "—") + '<small>' + esc(x.assigned_technician ? "Assigned: " + x.assigned_technician : "Unassigned") + '</small></td>' +
       '<td>' + badge(x.status) + '</td>' +
       '<td>' + fmt(x.created_at) + '</td>' +
     '</tr>'
@@ -603,11 +624,12 @@ function renderLoaners(rows) {
     '<tr class="clickable-row" data-loaner="' + esc(x.loaner_serial || "") + '">' +
       '<td>' + esc(x.loaner_serial || "—") + '</td>' +
       '<td>' + esc(x.loaner_type || "—") + '</td>' +
+      '<td>' + esc(x.metadata?.loaner_category || "Repair Loaner") + '</td>' +
       '<td>' + badge(x.loaner_status || "Available") + '</td>' +
       '<td>' + esc(x.assigned_student_name || "—") + '</td>' +
       '<td>' + esc(x.assigned_to_ticket || "—") + '</td>' +
     '</tr>'
-  ).join("") || '<tr><td colspan="5" class="empty">No loaners recorded.</td></tr>';
+  ).join("") || '<tr><td colspan="6" class="empty">No loaners recorded.</td></tr>';
 
   document.querySelectorAll("[data-loaner]").forEach(row =>
     row.onclick = () => openLoanerModal(row.dataset.loaner)
@@ -802,6 +824,12 @@ async function openTicketModal(ticketId) {
   if (!ticket) return;
   activeTicket = ticket;
 
+  const techMembers = dashboardRows.filter(x => x.record_type === "techteam_member" && x.member_active !== false);
+  const techOptions = '<option value="">Unassigned</option>' +
+    techMembers.map(x => '<option value="' + esc(x.member_name || x.student_id) + '" ' +
+      (x.member_name === ticket.assigned_technician ? "selected" : "") + '>' +
+      esc(x.member_name || x.student_id) + '</option>').join("");
+
   openModal(
     '<div class="modal-head"><div><div class="eyebrow">TICKET ' + esc(ticket.ticket_id) + '</div>' +
     '<h2>Ticket details</h2></div><button class="ghost-btn" id="closeModal">Close</button></div>' +
@@ -817,7 +845,7 @@ async function openTicketModal(ticketId) {
           '<option ' + (ticket.status === s ? "selected" : "") + '>' + s + '</option>'
         ).join("") +
       '</select></label>' +
-      '<label>Assigned technician<input name="assigned_technician" value="' + esc(ticket.assigned_technician || "") + '" placeholder="TechTeam member"></label>' +
+      '<label>Assigned technician<select name="assigned_technician">' + techOptions + '</select></label>' +
       '<label>Diagnosis notes<textarea name="diagnosis_notes" rows="4">' + esc(ticket.diagnosis_notes || "") + '</textarea></label>' +
       '<label>Additional needs<textarea name="additional_needs" rows="3">' + esc(ticket.additional_needs || "") + '</textarea></label>' +
       '<div id="shippingFields" class="' + (ticket.status === "Sent to Outsource Repair" ? "" : "hidden") + '">' +
@@ -886,6 +914,7 @@ function openLoanerModal(serial = "") {
     '<form id="loanerForm" class="modal-form">' +
       '<label>Serial<input name="serial" required value="' + esc(loaner?.loaner_serial || "") + '" ' + (creating ? "" : "readonly") + '></label>' +
       '<label>Device type<input name="type" required value="' + esc(loaner?.loaner_type || "") + '" placeholder="Chromebook"></label>' +
+      '<label>Loaner type<select name="loaner_category"><option>Repair Loaner</option><option>Day Loaner</option></select></label>' +
       '<label>Status<select name="status">' +
         ["Available","In Use","Maintenance","Retired"].map(s =>
           '<option ' + (loaner?.loaner_status === s ? "selected" : "") + '>' + s + '</option>'
@@ -903,6 +932,9 @@ function openLoanerModal(serial = "") {
     '</form>'
   );
 
+  const categorySelect = $('select[name="loaner_category"]', $("#loanerForm"));
+  if (categorySelect) categorySelect.value = loaner?.metadata?.loaner_category || "Repair Loaner";
+
   const form = $("#loanerForm");
   form.onsubmit = async e => {
     e.preventDefault();
@@ -915,13 +947,15 @@ function openLoanerModal(serial = "") {
       ? await supabase.rpc("create_loaner", {
           p_loaner_serial: fd.get("serial"),
           p_loaner_type: fd.get("type"),
-          p_notes: fd.get("notes")
+          p_notes: fd.get("notes"),
+          p_loaner_category: fd.get("loaner_category")
         })
       : await supabase.rpc("update_loaner", {
           p_loaner_serial: fd.get("serial"),
           p_loaner_type: fd.get("type"),
           p_loaner_status: fd.get("status"),
-          p_notes: fd.get("notes")
+          p_notes: fd.get("notes"),
+          p_loaner_category: fd.get("loaner_category")
         });
 
     if (r.error) {
@@ -982,6 +1016,54 @@ function openLoanerModal(serial = "") {
     closeModal();
     await loadDashboard();
   };
+}
+
+
+async function submitManualTicket(e) {
+  e.preventDefault();
+  if (!["techteam","admin"].includes(actualRole)) return;
+  const form=e.currentTarget, fd=new FormData(form), btn=form.querySelector('button[type="submit"]');
+  btn.disabled=true; $("#manualTicketMsg").textContent="Creating ticket…";
+  const r=await supabase.rpc("create_techteam_ticket",{
+    p_person_type:fd.get("manual_person_type"), p_person_name:fd.get("manual_person_name"),
+    p_student_id:fd.get("manual_student_id"), p_device_serial:fd.get("manual_device_serial"),
+    p_asset_tag:fd.get("manual_asset_tag"), p_repair_reason:fd.get("manual_repair_reason"),
+    p_issue_description:fd.get("manual_issue_description"), p_school:fd.get("manual_school"),
+    p_room_or_period:fd.get("manual_room_or_period")
+  });
+  if(r.error){ btn.disabled=false; $("#manualTicketMsg").textContent=r.error.message; return; }
+  toast((r.data?.ticket_id || "Ticket")+" created");
+  $("#manualTicketMsg").textContent="Ticket created successfully.";
+  form.reset();
+  await loadDashboard();
+}
+
+async function exportBackup() {
+  if(actualRole!=="admin") return;
+  const r=await supabase.rpc("export_vils_backup");
+  if(r.error){ toast("Backup export failed"); $("#reportBody").insertAdjacentHTML("afterbegin",'<div class="empty">'+esc(r.error.message)+'</div>'); return; }
+  const blob=new Blob([JSON.stringify(r.data,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob), a=document.createElement("a");
+  a.href=url; a.download="roselle-vils-backup-"+new Date().toISOString().slice(0,10)+".json";
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  toast("Backup exported");
+}
+
+async function importBackupFile(e) {
+  if(actualRole!=="admin") return;
+  const file=e.target.files?.[0]; if(!file) return;
+  if(!confirm("Restore this VILS backup? Existing student records will be updated and existing application records will not be duplicated.")){e.target.value="";return;}
+  try {
+    const backup=JSON.parse(await file.text());
+    const r=await supabase.rpc("import_vils_backup",{p_backup:backup});
+    if(r.error) throw new Error(r.error.message);
+    toast("Backup imported");
+    await loadDashboard();
+    $("#reportBody").insertAdjacentHTML("afterbegin",'<div class="empty">Backup restored successfully.</div>');
+  } catch(err) {
+    toast("Backup import failed");
+    $("#reportBody").insertAdjacentHTML("afterbegin",'<div class="empty">'+esc(err.message)+'</div>');
+  } finally { e.target.value=""; }
 }
 
 function openMemberModal(studentId = "") {
