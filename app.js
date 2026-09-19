@@ -239,8 +239,6 @@ function repairFields(prefix = "") {
     '</select></label>' + otherIssueField();
 }
 
-}
-
 function bindRepairReason(root) {
   const select = $("#repairReason", root);
   const wrap = $("#otherIssueWrap", root);
