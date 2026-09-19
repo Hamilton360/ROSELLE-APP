@@ -77,7 +77,6 @@ async function checkBackend() {
   const reachable = !r.error || String(r.error.message || "").toLowerCase().includes("no matching student");
   setConnection(reachable, reachable ? "" : r.error?.message);
 }
-}
 checkBackend();
 
 function auth(role) {
