@@ -430,6 +430,18 @@ function ensureDashboardTools() {
   $("#refreshRequests").onclick = renderDayRequests;
   $("#refreshReport").onclick = loadReport;
   $("#addMemberBtn").onclick = () => openMemberModal();
+
+  // Loaner inventory is managed from the existing Loaners panel.
+  const loanerHead = $("#dashLoaners .table-head");
+  if (loanerHead && !$("#addLoanerBtn")) {
+    loanerHead.insertAdjacentHTML("beforeend", '<button class="primary-btn compact-btn" id="addLoanerBtn">Add loaner <span>+</span></button>');
+    $("#addLoanerBtn").onclick = () => openLoanerModal();
+  }
+
+  // Members and reporting are administrator-only controls.
+  if (actualRole !== "admin") {
+    document.querySelectorAll('[data-panel="members"],[data-panel="reports"]').forEach(b => b.classList.add("hidden"));
+  }
 }
 
 function activatePanel(name) {
