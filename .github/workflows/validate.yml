@@ -1,0 +1,20 @@
+name: Validate VILS app
+
+on:
+  push:
+    branches: ["main", "vils-v2-workflow"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check JavaScript syntax
+        run: node --check app.js
+      - name: Check required frontend files
+        run: test -s index.html && test -s app.js && test -s styles.css && test -s netlify.toml
