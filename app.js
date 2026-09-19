@@ -390,6 +390,9 @@ $("#teacherForm").onsubmit = async e => {
   teacherStudent = null;
   $("#teacherStudentResult").textContent = "No student loaded.";
   document.querySelector('input[value="student"]').dispatchEvent(new Event("change"));
+  $("#teacherOtherIssueWrap").classList.add("hidden");
+  const otherField = $('textarea[name="other_issue_description"]', e.currentTarget);
+  if (otherField) otherField.required = false;
   submit.disabled = false;
 };
 
