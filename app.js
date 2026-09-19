@@ -80,27 +80,34 @@ checkBackend();
 
 function auth(role) {
   selectedRole = role;
-  $("#authTitle").textContent =
-    role === "techteam" ? "TechTeam sign in" :
-    role === "admin" ? "Admin sign in" :
-    role === "teacher" ? "Teacher / Staff sign in" : "Student sign in";
 
-  $("#authCopy").textContent =
-    role === "student"
-      ? "Sign in with your authorized student account."
-      : role === "teacher"
-        ? "Use your authorized staff account."
-        : "Use your authorized operations account to continue.";
+  // Student and Teacher / Staff are public service portals.
+  // Only TechTeam and Admin use authentication.
+  if (role === "student") {
+    show("student");
+    return;
+  }
 
+  if (role === "teacher") {
+    show("teacher");
+    return;
+  }
+
+  $("#authTitle").textContent = role === "techteam" ? "TechTeam sign in" : "Admin sign in";
+  $("#authCopy").textContent = role === "techteam"
+    ? "Enter the Student ID your Admin added to the TechTeam."
+    : "Use your authorized Admin email and password.";
+
+  const tech = role === "techteam";
+  $("#techStudentIdWrap").classList.toggle("hidden", !tech);
+  $("#emailWrap").classList.toggle("hidden", tech);
+  $("#passwordWrap").classList.toggle("hidden", tech);
+  $("#techStudentId").required = tech;
+  $("#email").required = !tech;
+  $("#password").required = !tech;
+  $("#techStudentId").value = "";
   $("#authError").textContent = "";
   show("auth");
-}
-
-function roleAllowed(selected, actual) {
-  if (!actual) return false;
-  if (selected === actual) return true;
-  if (selected === "teacher" && ["teacher","staff"].includes(actual)) return true;
-  return false;
 }
 
 document.querySelectorAll("[data-role]").forEach(b => b.onclick = () => auth(b.dataset.role));
@@ -120,6 +127,57 @@ $("#authForm").onsubmit = async e => {
   e.preventDefault();
   $("#authError").textContent = "Signing in…";
 
+  if (selectedRole === "techteam") {
+    const studentId = $("#techStudentId").value.trim();
+    if (!studentId) {
+      $("#authError").textContent = "Enter your Student ID.";
+      return;
+    }
+
+    // TechTeam uses a temporary Supabase Auth session behind the scenes.
+    // The visible credential is only the Student ID, and the Edge Function
+    // upgrades the session only when the ID belongs to an active TechTeam member.
+    const anon = await supabase.auth.signInAnonymously();
+    if (anon.error) {
+      $("#authError").textContent =
+        anon.error.message || "TechTeam sign-in is currently unavailable.";
+      return;
+    }
+
+    const verified = await supabase.functions.invoke("techteam-login", {
+      body: { student_id: studentId }
+    });
+
+    if (verified.error) {
+      await supabase.auth.signOut();
+      $("#authError").textContent =
+        verified.data?.error || verified.error.message || "That Student ID is not authorized for TechTeam.";
+      return;
+    }
+
+    const refreshed = await supabase.auth.refreshSession();
+    if (refreshed.error) {
+      await supabase.auth.signOut();
+      $("#authError").textContent = refreshed.error.message;
+      return;
+    }
+
+    session = refreshed.data.session;
+    actualRole = roleFromSession(session);
+
+    if (actualRole !== "techteam") {
+      await supabase.auth.signOut();
+      session = null;
+      actualRole = "";
+      $("#authError").textContent = "TechTeam access could not be established.";
+      return;
+    }
+
+    $("#signOutBtn").classList.remove("hidden");
+    await loadDashboard();
+    return;
+  }
+
   const r = await supabase.auth.signInWithPassword({
     email: $("#email").value.trim(),
     password: $("#password").value
@@ -133,20 +191,17 @@ $("#authForm").onsubmit = async e => {
   session = r.data.session;
   actualRole = roleFromSession(session);
 
-  if (!roleAllowed(selectedRole, actualRole)) {
+  if (actualRole !== "admin") {
     await supabase.auth.signOut();
     session = null;
     actualRole = "";
     $("#authError").textContent =
-      "This account is not configured for the selected VILS role. Contact a VILS administrator.";
+      "This account is not configured as a VILS Admin.";
     return;
   }
 
   $("#signOutBtn").classList.remove("hidden");
-
-  if (actualRole === "student") show("student");
-  else if (["teacher","staff"].includes(actualRole)) show("teacher");
-  else await loadDashboard();
+  await loadDashboard();
 };
 
 async function lookupStudent(id) {
